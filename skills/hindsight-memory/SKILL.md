@@ -124,3 +124,13 @@ Admin/DDL via Management API (token above):
 - No recall hits — check `namespace` matches, `status='active'`, embedding not null; try keyword-only query to separate vector vs BM25.
 - Management API 400 on SQL — quoting/`%` formatting issue; send SQL via a Python file (write tool), not inline shell quoting.
 - Upstream docs skill exists (`npx skills add https://github.com/vectorize-io/hindsight --skill hindsight-docs`) but describes the self-hosted server — do not follow its Docker/env setup here.
+
+## Enforcement (extension)
+
+Guarantee level chosen 2026-11-08: drop-in extension, not skill alone.
+
+- File: `/var/lib/pi-pocket/extensions/hindsight-memory.ts` (backup: repo `extension/hindsight-memory.ts`, no keys)
+- Gives Pi real tools `hindsight_retain`, `hindsight_recall`, `hindsight_reflect` + a `hindsight_memory` prompt section sent every request: memory questions must call recall/reflect first, "remember" must call retain.
+- Keys: server env `OPENROUTER_API_KEY`, plus local `extensions/hindsight-memory.config.json` (0600, service_role, never commit/read back).
+- **Starts off.** Owner must turn it on: Menu → Extensions → hindsight-memory. The agent cannot turn it on. Until then, tools do not exist and only this skill guides use.
+- Tested in isolation 2026-11-08 (node, bank `test`, cleaned up): retain/recall/reflect all passed, reflect gate YES.

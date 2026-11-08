@@ -127,10 +127,12 @@ Admin/DDL via Management API (token above):
 
 ## Enforcement (extension)
 
-Guarantee level chosen 2026-11-08: drop-in extension, not skill alone.
+Guarantee level chosen 2026-11-08: drop-in extension, not skill alone. Updated same day for prompt cache:
 
 - File: `/var/lib/pi-pocket/extensions/hindsight-memory.ts` (backup: repo `extension/hindsight-memory.ts`, no keys)
-- Gives Pi real tools `hindsight_retain`, `hindsight_recall`, `hindsight_reflect` + a `hindsight_memory` prompt section sent every request: memory questions must call recall/reflect first, "remember" must call retain.
+- **No prompt section.** Dynamic recall in the system prefix would bust the prompt cache every turn.
+- Instead a `GenerationTask.beforeRequest` hook injects a `<hindsight_context>` user message **just before the user's message**, only when the last message is a user message (first request of a turn — tool rounds skip). Everything before that point stays cacheable; the injected tail is new anyway. No hits or memory down = no change to the request.
+- Plus real tools `hindsight_retain`, `hindsight_recall`, `hindsight_reflect`. Their descriptions (stable, cached with the tool list) tell the model when to call them.
 - Keys: server env `OPENROUTER_API_KEY`, plus local `extensions/hindsight-memory.config.json` (0600, service_role, never commit/read back).
 - **Starts off.** Owner must turn it on: Menu → Extensions → hindsight-memory. The agent cannot turn it on. Until then, tools do not exist and only this skill guides use.
-- Tested in isolation 2026-11-08 (node, bank `test`, cleaned up): retain/recall/reflect all passed, reflect gate YES.
+- Tested in isolation 2026-11-08 (node): injection position, prefix unchanged, tool-round/short-message skips, and retain/recall/reflect all passed.
